@@ -180,7 +180,7 @@ class ApiClient(object):
         If obj is str, int, float, bool, return directly.
         If obj is datetime.datetime, datetime.date
             convert to string in iso8601 format.
-        If obj is list, santize each element in the list.
+        If obj is list, sanitize each element in the list.
         If obj is dict, return the dict.
         If obj is swagger model, return the properties dict.
 
@@ -338,6 +338,12 @@ class ApiClient(object):
             return self.rest_client.HEAD(url,
                                          query_params=query_params,
                                          headers=headers)
+        elif method == "OPTIONS":
+            return self.rest_client.OPTIONS(url,
+                                            query_params=query_params,
+                                            headers=headers,
+                                            post_params=post_params,
+                                            body=body)
         elif method == "POST":
             return self.rest_client.POST(url,
                                          query_params=query_params,
