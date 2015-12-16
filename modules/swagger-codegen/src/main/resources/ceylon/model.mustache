@@ -1,0 +1,64 @@
+//package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+// TODO: import the correct annotations?
+import io.swagger.annotations { apiModel, apiModelProperty }
+import com.fasterxml.jackson.annotation{ jsonProperty }
+{{#models}}
+
+{{#model}}{{#description}}
+"""
+   {{description}}
+   """{{/description}}
+apiModel{ description = "{{{description}}}"; }
+shared class {{classname}}({{#vars}}{{name}} {{#defaultValue}}={{{defaultValue}}}{{/defaultValue}}{{^defaultValue}}{{^required}} = null{{/required}}{{/defaultValue}} {{#hasMore}}, {{/hasMore}} {{/vars}}) {{#parent}}
+      extends {{{parent}}}(/* TODO: parent arguments? */){{/parent}} {
+
+// TODO: handle enum properties (figure out what the Java version did, and how we can reproduce this for Ceylon.)
+
+{{#vars}}
+
+  """{{#description}}{{{description}}}{{/description}}{{#minimum}}
+     minimum: {{minimum}}{{/minimum}}{{#maximum}}
+     maximum: {{maximum}}{{/maximum}}
+     """
+  apiModelProperty{ {{#required}} required = {{required}}; {{/required}} value = "{{{description}}}"; }
+  jsonProperty{ value = "{{baseName}}"; }
+  shared {{{datatypeWithEnum}}} {{name}};
+{{/vars}}
+
+  shared actual Boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if(is {{classname}} {{classVarName}} = o) {
+    {{#hasVars}}
+       return {{#vars}}{{name}} == {{classVarName}}.{{name}} {{#hasMore}} &&
+        {{/hasMore}}{{^hasMore}};{{/hasMore}}{{/vars}}
+    {{/hasVars}}
+    {{^hasVars}}
+        return true;
+    {{/hasVars}}
+    } else {
+       return false;
+    }
+  }
+
+  shared actual Integer hash =>
+      [{{#vars}}{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}].hash;
+
+
+  shared actual String string()  {
+    String indent(String s) => s.replace("\n", "\n    ");
+    value sb = StringBuilder();
+    sb.append("{{classname}} {\n");
+    {{#parent}}sb.append("    ").append(indent(super.string))).append("\n");{{/parent}}
+    {{#vars}}sb.append("    {{name}}: ").append(indent({{name}}.string)).append("\n");
+    {{/vars}}sb.append("}");
+    return sb.string;
+  }
+}
+{{/model}}
+{{/models}}
