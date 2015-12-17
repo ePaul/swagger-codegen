@@ -12,7 +12,6 @@ public class CodegenConstants {
 
     public static final String TEMPLATE_DIR = "templateDir";
 
-
     public static final String INVOKER_PACKAGE = "invokerPackage";
     public static final String INVOKER_PACKAGE_DESC = "root package for generated code";
 
@@ -32,20 +31,26 @@ public class CodegenConstants {
     public static final String LOCAL_VARIABLE_PREFIX_DESC = "prefix for generated code members and local variables";
 
     public static final String SERIALIZABLE_MODEL = "serializableModel";
-    public static final String SERIALIZABLE_MODEL_DESC = "boolean - toggle \"implements Serializable\" for generated models";
+    public static final String SERIALIZABLE_MODEL_DESC =
+        "boolean - toggle \"implements Serializable\" for generated models";
 
     public static final String LIBRARY = "library";
     public static final String LIBRARY_DESC = "library template (sub-template)";
 
     public static final String SORT_PARAMS_BY_REQUIRED_FLAG = "sortParamsByRequiredFlag";
-    public static final String SORT_PARAMS_BY_REQUIRED_FLAG_DESC = "Sort method arguments to place required parameters before optional parameters.";
+    public static final String SORT_PARAMS_BY_REQUIRED_FLAG_DESC =
+        "Sort method arguments to place required parameters before optional parameters.";
 
     public static final String ENSURE_UNIQUE_PARAMS = "ensureUniqueParams";
-    public static final String ENSURE_UNIQUE_PARAMS_DESC = "Whether to ensure parameter names are unique in an operation (rename parameters that are not).";
+    public static final String ENSURE_UNIQUE_PARAMS_DESC =
+        "Whether to ensure parameter names are unique in an operation (rename parameters that are not).";
 
     public static final String PACKAGE_NAME = "packageName";
     public static final String PACKAGE_VERSION = "packageVersion";
     public static final String POD_VERSION = "podVersion";
+
+    public static final String MODULE_VERSION = "moduleVersion";
+    public static final String MODULE_VERSION_DESC = "Version number to use for the generated API module.";
 
     public static final String OPTIONAL_METHOD_ARGUMENT = "optionalMethodArgument";
 }

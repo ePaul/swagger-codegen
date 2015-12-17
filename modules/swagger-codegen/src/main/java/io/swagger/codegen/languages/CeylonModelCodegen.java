@@ -21,17 +21,12 @@ import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
 import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenModel;
-import io.swagger.codegen.CodegenOperation;
 import io.swagger.codegen.CodegenProperty;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
+import io.swagger.codegen.SupportingFile;
 
 import io.swagger.models.Model;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.Swagger;
-import io.swagger.models.parameters.FormParameter;
-import io.swagger.models.parameters.Parameter;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DoubleProperty;
@@ -49,15 +44,9 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
 
     protected String invokerPackage = "io.swagger.client";
 
-// protected String groupId = "io.swagger";
-// protected String artifactId = "swagger-java-client";
-// protected String artifactVersion = "1.0.0";
-    protected String projectFolder = "src" + File.separator + "main";
-    protected String sourceFolder = projectFolder + File.separator + "java";
-    protected String localVariablePrefix = "";
-    protected boolean fullJavaUtil = false;
-    protected String javaUtilPrefix = "";
-    protected Boolean serializableModel = false;
+    protected String sourceFolder = "";
+
+    protected String versionNumber = "0.0.1-SNAPSHOT";
 
     public CeylonModelCodegen() {
         super();
@@ -87,41 +76,56 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
                     // "throws", "tagged"
                 ));
 
-        languageSpecificPrimitives = new HashSet<String>(Arrays.asList("String", "Boolean", "Integer", "Float",
-                    "Object"
+        languageSpecificPrimitives = new HashSet<String>(Arrays.asList("String", "Boolean", "Integer",
+                    "Float"
                     // TODO: "byte[]"
                 ));
+        defaultIncludes = new HashSet<String>(Arrays.asList("String", "Boolean", "Integer", "Float", "List", "Map"));
+
+        instantiationTypes = new HashMap<String, String>();
         instantiationTypes.put("array", "List");
         instantiationTypes.put("map", "Map");
 
+        cliOptions.add(new CliOption(CodegenConstants.MODULE_VERSION, CodegenConstants.MODULE_VERSION_DESC));
+        cliOptions.add(new CliOption(CodegenConstants.INVOKER_PACKAGE, CodegenConstants.INVOKER_PACKAGE_DESC));
         cliOptions.add(new CliOption(CodegenConstants.MODEL_PACKAGE, CodegenConstants.MODEL_PACKAGE_DESC));
 
-        // cliOptions.add(new CliOption(CodegenConstants.API_PACKAGE, CodegenConstants.API_PACKAGE_DESC));
-        cliOptions.add(new CliOption(CodegenConstants.INVOKER_PACKAGE, CodegenConstants.INVOKER_PACKAGE_DESC));
-
-        // cliOptions.add(new CliOption(CodegenConstants.GROUP_ID, CodegenConstants.GROUP_ID_DESC));
-        // cliOptions.add(new CliOption(CodegenConstants.ARTIFACT_ID, CodegenConstants.ARTIFACT_ID_DESC));
-        // cliOptions.add(new CliOption(CodegenConstants.ARTIFACT_VERSION, CodegenConstants.ARTIFACT_VERSION_DESC));
-        // cliOptions.add(new CliOption(CodegenConstants.SOURCE_FOLDER, CodegenConstants.SOURCE_FOLDER_DESC));
         cliOptions.add(new CliOption(CodegenConstants.LOCAL_VARIABLE_PREFIX,
                 CodegenConstants.LOCAL_VARIABLE_PREFIX_DESC));
-        // cliOptions.add(new CliOption(CodegenConstants.SERIALIZABLE_MODEL, CodegenConstants.SERIALIZABLE_MODEL_DESC));
-        // cliOptions.add(new CliOption(FULL_JAVA_UTIL,
-        // "whether to use fully qualified name for classes under java.util").defaultValue("false"));
 
-// supportedLibraries.put(DEFAULT_LIBRARY, "HTTP client: Jersey client 1.18. JSON processing: Jackson 2.4.2");
-// supportedLibraries.put("feign", "HTTP client: Netflix Feign 8.1.1");
-// supportedLibraries.put("jersey2", "HTTP client: Jersey client 2.6");
-// supportedLibraries.put("okhttp-gson", "HTTP client: OkHttp 2.4.0. JSON processing: Gson 2.3.1");
-// supportedLibraries.put("retrofit", "HTTP client: OkHttp 2.4.0. JSON processing: Gson 2.3.1 (Retrofit 1.9.0)");
-// supportedLibraries.put("retrofit2",
-// "HTTP client: OkHttp 2.5.0. JSON processing: Gson 2.4 (Retrofit 2.0.0-beta2)");
+        typeMapping = new HashMap<String, String>();
+        typeMapping.put("array", "List");
+        typeMapping.put("map", "Map");
+        typeMapping.put("List", "List");
+        typeMapping.put("boolean", "Boolean");
+        typeMapping.put("string", "String");
+        typeMapping.put("int", "Integer");
+        typeMapping.put("float", "Float");
+        typeMapping.put("number", "Decimal");
+        typeMapping.put("DateTime", "Date");
+        typeMapping.put("long", "Integer");
+        typeMapping.put("short", "Integer");
+        typeMapping.put("char", "String");
+        typeMapping.put("double", "Float");
+        typeMapping.put("object", "Object");         // TODO - is this the right thing to use?
+        typeMapping.put("integer", "Integer");
+        typeMapping.put("ByteArray", "Array<Byte>"); // TODO
 
-        final CliOption library = new CliOption(CodegenConstants.LIBRARY, "library template (sub-template) to use");
-        library.setDefault(DEFAULT_LIBRARY);
-        library.setEnum(supportedLibraries);
-        library.setDefault(DEFAULT_LIBRARY);
-        cliOptions.add(library);
+        importMapping = new HashMap<String, String>();
+        importMapping.put("Decimal", "ceylon.math.decimal.Decimal");
+
+        // TODO?
+        importMapping.put("UUID", "java.util.UUID");
+        importMapping.put("File", "java.io.File");
+        importMapping.put("Date", "java.util.Date");
+        importMapping.put("Timestamp", "java.sql.Timestamp");
+
+        // TODO: ceylon.time?
+        importMapping.put("DateTime", "org.joda.time.*");
+        importMapping.put("LocalDateTime", "org.joda.time.*");
+        importMapping.put("LocalDate", "org.joda.time.*");
+        importMapping.put("LocalTime", "org.joda.time.*");
+
     }
 
     @Override
@@ -136,7 +140,7 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public String getHelp() {
-        return "Generates ceylon classes";
+        return "Generates ceylon data model classes";
     }
 
     @Override
@@ -151,38 +155,28 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
             additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
         }
 
+        if (additionalProperties.containsKey(CodegenConstants.MODEL_PACKAGE)) {
+            this.setInvokerPackage((String) additionalProperties.get(CodegenConstants.MODEL_PACKAGE));
+        } else {
+
+            // not set, use default to be passed to template
+            modelPackage = invokerPackage + ".model";
+            additionalProperties.put(CodegenConstants.MODEL_PACKAGE, modelPackage);
+        }
+
         if (additionalProperties.containsKey(CodegenConstants.SOURCE_FOLDER)) {
             this.setSourceFolder((String) additionalProperties.get(CodegenConstants.SOURCE_FOLDER));
         }
 
-        if (additionalProperties.containsKey(CodegenConstants.LOCAL_VARIABLE_PREFIX)) {
-            this.setLocalVariablePrefix((String) additionalProperties.get(CodegenConstants.LOCAL_VARIABLE_PREFIX));
-        }
-
-        if (additionalProperties.containsKey(CodegenConstants.SERIALIZABLE_MODEL)) {
-            this.setSerializableModel(Boolean.valueOf(
-                    additionalProperties.get(CodegenConstants.SERIALIZABLE_MODEL).toString()));
-        }
-
-        if (additionalProperties.containsKey(CodegenConstants.LIBRARY)) {
-            this.setLibrary((String) additionalProperties.get(CodegenConstants.LIBRARY));
-        }
-
-        // need to put back serializableModel (boolean) into additionalProperties as value in additionalProperties is
-        // string
-        additionalProperties.put(CodegenConstants.SERIALIZABLE_MODEL, serializableModel);
-
         this.sanitizeConfig();
 
-        // supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
-// TODO        supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
-// supportingFiles.add(new SupportingFile("build.gradle.mustache", "", "build.gradle"));
-// supportingFiles.add(new SupportingFile("settings.gradle.mustache", "", "settings.gradle"));
-// supportingFiles.add(new SupportingFile("gradle.properties.mustache", "", "gradle.properties"));
-// supportingFiles.add(new SupportingFile("manifest.mustache", projectFolder, "AndroidManifest.xml"));
-        // supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder, "ApiClient.java"));
-        // supportingFiles.add(new SupportingFile("StringUtil.mustache", invokerFolder, "StringUtil.java"));
+        final String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
+        final String modelFolder = (sourceFolder + '/' + modelPackage).replace(".", "/");
 
+        supportingFiles.add(new SupportingFile("module.mustache", invokerFolder, "module.ceylon"));
+        supportingFiles.add(new SupportingFile("package.mustache", modelFolder, "package.ceylon"));
+
+        additionalProperties.put("versionNumber", versionNumber);
     }
 
     private void sanitizeConfig() {
@@ -230,9 +224,9 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
             name = "_u";
         }
 
-        // if it's all uppper case, do nothing
+        // if it's all uppper case, convert to lower case (Ceylon needs lower case identifiers for values)
         if (name.matches("^[A-Z_]*$")) {
-            return name;
+            name = name.toLowerCase();
         }
 
         // camelize (lower first character) the variable name
@@ -277,94 +271,71 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public String getTypeDeclaration(final Property p) {
+        final String typeDeclaration;
         if (p instanceof ArrayProperty) {
             final ArrayProperty ap = (ArrayProperty) p;
             final Property inner = ap.getItems();
-            return getSwaggerType(p) + "<" + getTypeDeclaration(inner) + ">";
+            typeDeclaration = getSwaggerType(p) + "<" + getTypeDeclaration(inner) + ">";
         } else if (p instanceof MapProperty) {
             final MapProperty mp = (MapProperty) p;
             final Property inner = mp.getAdditionalProperties();
 
-            return getSwaggerType(p) + "<String, " + getTypeDeclaration(inner) + ">";
+            typeDeclaration = getSwaggerType(p) + "<String, " + getTypeDeclaration(inner) + ">";
+        } else {
+            typeDeclaration = super.getTypeDeclaration(p);
         }
 
-        return super.getTypeDeclaration(p);
+        if (p.getRequired()) {
+            return typeDeclaration;
+        } else {
+            return typeDeclaration + "?";
+        }
     }
 
     @Override
     public String toDefaultValue(final Property p) {
-        if (p instanceof ArrayProperty) {
-            final ArrayProperty ap = (ArrayProperty) p;
-            final String pattern;
-            if (fullJavaUtil) {
-                pattern = "new java.util.ArrayList<%s>()";
-            } else {
-                pattern = "new ArrayList<%s>()";
-            }
 
-            return String.format(pattern, getTypeDeclaration(ap.getItems()));
-        } else if (p instanceof MapProperty) {
-            final MapProperty ap = (MapProperty) p;
-            final String pattern;
-            if (fullJavaUtil) {
-                pattern = "new java.util.HashMap<String, %s>()";
-            } else {
-                pattern = "new HashMap<String, %s>()";
-            }
-
-            return String.format(pattern, getTypeDeclaration(ap.getAdditionalProperties()));
-        } else if (p instanceof IntegerProperty) {
+        // use `null` instead of `"null"` when there is no default value.
+        if (p instanceof IntegerProperty) {
             final IntegerProperty dp = (IntegerProperty) p;
             if (dp.getDefault() != null) {
                 return dp.getDefault().toString();
             }
-
-            return "null";
         } else if (p instanceof LongProperty) {
             final LongProperty dp = (LongProperty) p;
             if (dp.getDefault() != null) {
-                return dp.getDefault().toString() + "l";
+                return dp.getDefault().toString();
             }
-
-            return "null";
         } else if (p instanceof DoubleProperty) {
             final DoubleProperty dp = (DoubleProperty) p;
             if (dp.getDefault() != null) {
-                return dp.getDefault().toString() + "d";
+                return dp.getDefault().toString();
             }
-
-            return "null";
         } else if (p instanceof FloatProperty) {
             final FloatProperty dp = (FloatProperty) p;
             if (dp.getDefault() != null) {
-                return dp.getDefault().toString() + "f";
+                return dp.getDefault().toString();
             }
-
-            return "null";
         } else if (p instanceof BooleanProperty) {
             final BooleanProperty bp = (BooleanProperty) p;
             if (bp.getDefault() != null) {
                 return bp.getDefault().toString();
             }
-
-            return "null";
         } else if (p instanceof StringProperty) {
             final StringProperty sp = (StringProperty) p;
             if (sp.getDefault() != null) {
-                final String _default = sp.getDefault();
+                final String defaultValue = sp.getDefault();
                 if (sp.getEnum() == null) {
-                    return "\"" + escapeText(_default) + "\"";
+                    return "\"" + escapeText(defaultValue) + "\"";
                 } else {
 
                     // convert to enum var name later in postProcessModels
-                    return _default;
+                    return defaultValue;
                 }
             }
-
-            return "null";
         }
 
-        return super.toDefaultValue(p);
+        return null;
     }
 
     @Override
@@ -418,11 +389,15 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public Map<String, Object> postProcessModels(final Map<String, Object> objs) {
+        @SuppressWarnings("unchecked")
         final List<Object> models = (List<Object>) objs.get("models");
         for (final Object _mo : models) {
+            @SuppressWarnings("unchecked")
             final Map<String, Object> mo = (Map<String, Object>) _mo;
             final CodegenModel cm = (CodegenModel) mo.get("model");
             for (final CodegenProperty var : cm.vars) {
+
+                // TODO: implement proper enum handling. The stuff here is copied from Java and likely won't work.
                 Map<String, Object> allowableValues = var.allowableValues;
 
                 // handle ArrayProperty
@@ -434,6 +409,7 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
                     continue;
                 }
 
+                @SuppressWarnings("unchecked")
                 final List<String> values = (List<String>) allowableValues.get("values");
                 if (values == null) {
                     continue;
@@ -480,98 +456,6 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
         }
 
         return objs;
-    }
-
-    @Override
-    public Map<String, Object> postProcessOperations(final Map<String, Object> objs) {
-        if ("retrofit".equals(getLibrary()) || "retrofit2".equals(getLibrary())) {
-            final Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
-            if (operations != null) {
-                final List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
-                for (final CodegenOperation operation : ops) {
-                    if (operation.hasConsumes == Boolean.TRUE) {
-                        final Map<String, String> firstType = operation.consumes.get(0);
-                        if (firstType != null) {
-                            if ("multipart/form-data".equals(firstType.get("mediaType"))) {
-                                operation.isMultipart = Boolean.TRUE;
-                            }
-                        }
-                    }
-
-                    if (operation.returnType == null) {
-                        operation.returnType = "Void";
-                    }
-
-                    if ("retrofit2".equals(getLibrary()) && StringUtils.isNotEmpty(operation.path)
-                            && operation.path.startsWith("/")) {
-                        operation.path = operation.path.substring(1);
-                    }
-                }
-            }
-        }
-
-        return objs;
-    }
-
-    @Override
-    public void preprocessSwagger(final Swagger swagger) {
-        if (swagger != null && swagger.getPaths() != null) {
-            for (final String pathname : swagger.getPaths().keySet()) {
-                final Path path = swagger.getPath(pathname);
-                if (path.getOperations() != null) {
-                    for (final Operation operation : path.getOperations()) {
-                        boolean hasFormParameters = false;
-                        for (final Parameter parameter : operation.getParameters()) {
-                            if (parameter instanceof FormParameter) {
-                                hasFormParameters = true;
-                            }
-                        }
-
-                        final String defaultContentType = hasFormParameters ? "application/x-www-form-urlencoded"
-                                                                            : "application/json";
-                        final String contentType = operation.getConsumes() == null || operation
-                                .getConsumes().isEmpty() ? defaultContentType : operation
-                                .getConsumes().get(0);
-                        final String accepts = getAccept(operation);
-                        operation.setVendorExtension("x-contentType", contentType);
-                        operation.setVendorExtension("x-accepts", accepts);
-                    }
-                }
-            }
-        }
-    }
-
-    private String getAccept(final Operation operation) {
-        String accepts = null;
-        final String defaultContentType = "application/json";
-        if (operation.getProduces() != null && !operation.getProduces().isEmpty()) {
-            final StringBuilder sb = new StringBuilder();
-            for (final String produces : operation.getProduces()) {
-                if (defaultContentType.equalsIgnoreCase(produces)) {
-                    accepts = defaultContentType;
-                    break;
-                } else {
-                    if (sb.length() > 0) {
-                        sb.append(",");
-                    }
-
-                    sb.append(produces);
-                }
-            }
-
-            if (accepts == null) {
-                accepts = sb.toString();
-            }
-        } else {
-            accepts = defaultContentType;
-        }
-
-        return accepts;
-    }
-
-    @Override
-    protected boolean needToImport(final String type) {
-        return super.needToImport(type) && type.indexOf(".") < 0;
     }
 
     private String findCommonPrefixOfVars(final List<String> vars) {
@@ -653,18 +537,6 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
         this.sourceFolder = sourceFolder;
     }
 
-    public void setLocalVariablePrefix(final String localVariablePrefix) {
-        this.localVariablePrefix = localVariablePrefix;
-    }
-
-    public Boolean getSerializableModel() {
-        return serializableModel;
-    }
-
-    public void setSerializableModel(final Boolean serializableModel) {
-        this.serializableModel = serializableModel;
-    }
-
     private String sanitizePackageName(String packageName) {
         packageName = packageName.trim();
         packageName = packageName.replaceAll("[^a-zA-Z0-9_\\.]", "_");
@@ -673,9 +545,5 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
         }
 
         return packageName;
-    }
-
-    public void setFullJavaUtil(final boolean fullJavaUtil) {
-        this.fullJavaUtil = fullJavaUtil;
     }
 }
