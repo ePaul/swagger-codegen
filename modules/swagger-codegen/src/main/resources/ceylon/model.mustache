@@ -1,9 +1,10 @@
 //package {{package}};
 
-{{#imports}}import {{import}};
-{{/imports}}
-
-// TODO: import the correct annotations?
+import {{invokerPackage}} {
+	CustomJsonable,
+	JSMap,
+	JSArray
+}
 import io.swagger.annotations {
     apiModel,
     apiModelProperty__GETTER
@@ -19,7 +20,8 @@ import com.fasterxml.jackson.annotation {
    """{{/description}}
 apiModel{ description = "{{{description}}}"; }
 shared class {{classname}}({{#vars}}{{name}}{{#defaultValue}} = {{{defaultValue}}}{{/defaultValue}}{{^defaultValue}}{{^required}} = null{{/required}}{{/defaultValue}}{{#hasMore}}, {{/hasMore}}{{/vars}}) {{#parent}}
-      extends {{{parent}}}(/* TODO: parent arguments? */){{/parent}} {
+      extends {{{parent}}}(/* TODO: parent arguments? */){{/parent}}
+      satisfies CustomJsonable {
 
 // TODO: handle enum properties (figure out what the Java version did, and how we can reproduce this for Ceylon.)
 
@@ -34,16 +36,15 @@ shared class {{classname}}({{#vars}}{{name}}{{#defaultValue}} = {{{defaultValue}
   shared {{{datatypeWithEnum}}} {{name}};
 {{/vars}}
 
-  shared actual Boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    } else if(is {{classname}} o) {
-      return [{{#vars}}this.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}]
-          == [{{#vars}}   o.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}];
-    } else {
-       return false;
-    }
-  }
+  shared actual Boolean equals(Object o) =>
+    this == o ||
+      (if(is {{classname}} o)
+       then [{{#vars}}this.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}]
+         == [{{#vars}}   o.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}]
+       else false);
+  
+  shared actual String json =>
+      JSMap{ {{#vars}}"{{name}}" -> {{#items}}JSArray({{/items}}this.{{name}}{{#items}}){{/items}}{{#hasMore}}, {{/hasMore}}{{/vars}} }.json;
 
   shared actual Integer hash =>
       [{{#vars}}this.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}].hash;

@@ -174,7 +174,9 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
         final String modelFolder = (sourceFolder + '/' + modelPackage).replace(".", "/");
 
         supportingFiles.add(new SupportingFile("module.mustache", invokerFolder, "module.ceylon"));
-        supportingFiles.add(new SupportingFile("package.mustache", modelFolder, "package.ceylon"));
+        supportingFiles.add(new SupportingFile("invokerPackage.mustache", invokerFolder, "package.ceylon"));
+        supportingFiles.add(new SupportingFile("modelPackage.mustache", modelFolder, "package.ceylon"));
+        supportingFiles.add(new SupportingFile("jsonHelper.mustache", invokerFolder, "jsonHelper.ceylon"));
 
         additionalProperties.put("versionNumber", versionNumber);
     }
@@ -275,10 +277,12 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
         if (p instanceof ArrayProperty) {
             final ArrayProperty ap = (ArrayProperty) p;
             final Property inner = ap.getItems();
+            inner.setRequired(true);
             typeDeclaration = getSwaggerType(p) + "<" + getTypeDeclaration(inner) + ">";
         } else if (p instanceof MapProperty) {
             final MapProperty mp = (MapProperty) p;
             final Property inner = mp.getAdditionalProperties();
+            inner.setRequired(true);
 
             typeDeclaration = getSwaggerType(p) + "<String, " + getTypeDeclaration(inner) + ">";
         } else {
