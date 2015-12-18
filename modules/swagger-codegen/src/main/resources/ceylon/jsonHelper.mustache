@@ -1,28 +1,33 @@
-import org.zalando.ceylon_stups.helloWorldApi {
-	toJson
-}
 shared interface CustomJsonable {
-	shared formal String json;
+    shared formal String json;
 }
 shared class JSMap({<String->Jsonable>*} entries)
-		satisfies CustomJsonable {
-	shared actual String json => entries.map<String>((String->Jsonable entry) => quote(entry.key) + ": " + toJson(entry.item)).string;
+       satisfies CustomJsonable {
+    shared actual String json =>
+            "{ " + ", ".join(entries.map<String>((entry) => quote(entry.key) + ": " + toJson(entry.item))) + " }";
 }
-shared class JSArray(shared {Jsonable*} array)
-		satisfies CustomJsonable {
-	shared actual String json => "[ " + ", ".join(array.map(toJson)) + " ]";
+
+// four dimensions must be enough for everyone ;-)
+shared class JSArray({Jsonable*}|{{Jsonable*}*}|{{{Jsonable*}*}*}|{{{{Jsonable*}*}*}*} array)
+       satisfies CustomJsonable {
+    {Jsonable*} actualArray =
+             if(is {Jsonable*} array)
+             then array
+             else array.map((element) => JSArray(element));
+
+    shared actual String json => "[ " + ", ".join(actualArray.map(toJson)) + " ]";
 }
 
 shared alias Jsonable => CustomJsonable|String|Integer|Float|Null;
 
 String quote(String string) {
-	return "\"" + string.replace("""\""", """\\""").replace(""""""", """\"""") + "\"";
+    return "\"" + string.replace("""\""", """\\""").replace(""""""", """\"""") + "\"";
 }
 
 shared String toJson(Jsonable jsonable) {
-	switch (jsonable)
-	case (is CustomJsonable) { return jsonable.json; }
-	case (is String) { return quote(jsonable); }
-	case (is Integer|Float) { return jsonable.string; }
-	case (is Null) { return "null"; }
+    switch (jsonable)
+    case (is CustomJsonable) { return jsonable.json; }
+    case (is String) { return quote(jsonable); }
+    case (is Integer|Float) { return jsonable.string; }
+    case (is Null) { return "null"; }
 }
