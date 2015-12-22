@@ -77,8 +77,15 @@ shared {{classname}}|ParseError parseJson{{classname}}(EventStream stream) {
                     return duplicateKey(`{{classname}}`, key);
                 }
                 {{-- TODO: figure out how to handle maps --}}
-                {{#items}}value item = parseJsonArray(stream, {{#items}}(s)=>parseJsonArray(s, parseJson{{{datatypeWithEnum}}}){{/items}}{{^items}}parseJson{{{datatypeWithEnum}}}{{/items}});
-                {{/items}}{{^items}}value item = parseJson{{{datatypeWithEnum}}}(stream);
+                value item = {{#items}}parseJsonArray(stream,
+                                            {{#items}}(s)=>parseJsonArray(s,
+                                                                {{#items}}(s)=>parseJsonArray(s,
+                                                                                    {{#items}}(s)=>parseJsonArray(s,
+                                                                                                                  parseJson{{{datatypeWithEnum}}})
+                                                                                    {{/items}}{{^items}}parseJson{{{datatypeWithEnum}}}{{/items}})
+                                                                {{/items}}{{^items}}parseJson{{{datatypeWithEnum}}}{{/items}})
+                                            {{/items}}{{^items}}parseJson{{{datatypeWithEnum}}}{{/items}});
+                {{/items}}{{^items}}parseJson{{{datatypeWithEnum}}}(stream);
                 {{/items}}
 
                 if(is ParseError item) {
