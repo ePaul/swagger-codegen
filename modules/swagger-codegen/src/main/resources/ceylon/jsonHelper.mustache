@@ -1,6 +1,7 @@
 shared interface CustomJsonable {
     shared formal String json;
 }
+
 shared class JSMap({<String->Jsonable>*} entries)
        satisfies CustomJsonable {
     shared actual String json =>

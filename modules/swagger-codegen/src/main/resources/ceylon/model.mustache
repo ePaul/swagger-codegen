@@ -1,16 +1,25 @@
 //package {{package}};
 
-import {{invokerPackage}} {
-	CustomJsonable,
-	JSMap,
-	JSArray
+import ceylon.json.stream {
+    ObjectStartEvent,
+    KeyEvent,
+    ObjectEndEvent
 }
-import io.swagger.annotations {
-    apiModel,
-    apiModelProperty__GETTER
-}
-import com.fasterxml.jackson.annotation {
-    jsonProperty__GETTER
+import {{helperPackage}} {
+    CustomJsonable,
+    JSMap,
+    JSArray,
+    EventStream,
+    ParseError,
+    duplicateKey,
+    missingKey,
+    unexpectedEvent,
+    unexpectedKey,
+    parseJsonString,
+    parseJsonArray,
+    parseJsonInteger,
+    parseJsonMap,
+    parseJsonBoolean
 }
 {{#models}}
 
@@ -18,12 +27,11 @@ import com.fasterxml.jackson.annotation {
 """
    {{description}}
    """{{/description}}
-apiModel{ description = "{{{description}}}"; }
 shared class {{classname}}({{#vars}}{{name}}{{#defaultValue}} = {{{defaultValue}}}{{/defaultValue}}{{^defaultValue}}{{^required}} = null{{/required}}{{/defaultValue}}{{#hasMore}}, {{/hasMore}}{{/vars}}) {{#parent}}
       extends {{{parent}}}(/* TODO: parent arguments? */){{/parent}}
       satisfies CustomJsonable {
 
-// TODO: handle enum properties (figure out what the Java version did, and how we can reproduce this for Ceylon.)
+{{-- TODO: handle enum properties (figure out what the Java version did, and how we can reproduce this for Ceylon.) --}}
 
 {{#vars}}
 
@@ -31,10 +39,9 @@ shared class {{classname}}({{#vars}}{{name}}{{#defaultValue}} = {{{defaultValue}
      minimum: {{minimum}}{{/minimum}}{{#maximum}}
      maximum: {{maximum}}{{/maximum}}
      """
-  apiModelProperty__GETTER { {{#required}} required = {{required}}; {{/required}} \ivalue = "{{{description}}}"; }
-  jsonProperty__GETTER { \ivalue = "{{baseName}}"; }
   shared {{{datatypeWithEnum}}} {{name}};
 {{/vars}}
+
 
   shared actual Boolean equals(Object o) =>
     this == o ||
@@ -42,22 +49,65 @@ shared class {{classname}}({{#vars}}{{name}}{{#defaultValue}} = {{{defaultValue}
        then [{{#vars}}this.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}]
          == [{{#vars}}   o.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}]
        else false);
-  
-  shared actual String json =>
-      JSMap{ {{#vars}}"{{name}}" -> {{#items}}JSArray({{/items}}this.{{name}}{{#items}}){{/items}}{{#hasMore}}, {{/hasMore}}{{/vars}} }.json;
 
   shared actual Integer hash =>
       [{{#vars}}this.{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}}].hash;
+  
+  shared actual String json =>
+      JSMap{ {{#vars}}"{{name}}" -> {{#items}}JSArray({{/items}}this.{{name}}{{#items}}){{/items}}{{#hasMore}},
+             {{/hasMore}}{{/vars}} }.json;
 
-  shared actual String string  {
-    String indent(Object? s) => s?.string?.replace("\n", "\n    ") else "<null>";
-    value sb = StringBuilder();
-    sb.append("{{classname}} {\n");
-    {{#parent}}sb.append("    ").append(indent(super.string))).append("\n");
-    {{/parent}}{{#vars}}sb.append("    {{name}}: ").append(indent({{name}})).append("\n");
-    {{/vars}}sb.append("}");
-    return sb.string;
-  }
+  shared actual String string => json;
 }
+
+
+shared {{classname}}|ParseError parseJson{{classname}}(EventStream stream) {
+    value firstEvent = stream.next();
+    if (!firstEvent is ObjectStartEvent) {
+        return unexpectedEvent(`{{classname}}`, firstEvent, `ObjectStartEvent`);
+    }
+    {{#vars}}variable {{{datatypeWithEnum}}}? {{name}} = null;
+    {{/vars}}
+    while(true) {
+        switch(event = stream.next())
+        case(is KeyEvent) {
+            switch(key = event.key)
+            {{#vars}}case ("{{baseName}}") {
+                if({{name}} exists) {
+                    return duplicateKey(`{{classname}}`, key);
+                }
+                {{-- TODO: figure out how to handle maps --}}
+                {{#items}}value item = parseJsonArray(stream, {{#items}}(s)=>parseJsonArray(s, parseJson{{{datatypeWithEnum}}}){{/items}}{{^items}}parseJson{{{datatypeWithEnum}}}{{/items}});
+                {{/items}}{{^items}}value item = parseJson{{{datatypeWithEnum}}}(stream);
+                {{/items}}
+
+                if(is ParseError item) {
+                    return item;
+                } else {
+                    {{name}} = item;
+                }
+            }
+            {{/vars}}else {
+                return unexpectedKey(`{{classname}}`, key);
+            }
+        }
+        case(is ObjectEndEvent) {
+            {{#vars}}{{#required}}
+            if(!{{name}} exists) {
+                return missingKey(`{{classname}}`, "{{baseName}}");
+            }{{/required}}{{/vars}}
+
+            assert({{#vars}}{{#required}}exists {{name}}_required = {{name}}, {{/required}}{{/vars}}true);
+            return {{classname}} {
+                       {{#vars}}{{#required}}{{name}} = {{name}}_required;
+                       {{/required}}{{^required}}{{name}} = {{name}};
+                       {{/required}}{{/vars}} };
+        }
+        else {
+            return unexpectedEvent(`{{classname}}`, event);
+        }
+    }
+}
+
 {{/model}}
 {{/models}}

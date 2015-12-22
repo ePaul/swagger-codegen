@@ -1,0 +1,121 @@
+import ceylon.json.stream {
+    Event,
+    LookAhead,
+    ArrayStartEvent,
+    ArrayEndEvent,
+    ObjectStartEvent,
+    ObjectEndEvent,
+    KeyEvent
+}
+import ceylon.language.meta.model {
+    Type
+}
+import ceylon.collection {
+    ArrayList,
+    HashMap,
+    unmodifiableMap
+}
+
+shared alias EventStream => LookAhead<Event>;
+
+shared final class ParseError(shared actual String string) {}
+
+shared ParseError unexpectedEvent(Type<> context, Event|Finished e, Type<>? expected = null)
+        => ParseError("When parsing ``context``: Unexpected JSON event `` e else "<null>" ``" +
+            (if (exists expected) then ", expected ``expected``." else ""));
+
+shared ParseError missingKey(Type<> type, String key)
+        => ParseError("Missing key ``key`` when parsing ``type``");
+
+shared ParseError unexpectedKey(Type<> type, String key)
+        => ParseError("Unexpected key ``key`` when parsing ``type``");
+
+shared ParseError duplicateKey(Type<>type, String key)
+        => ParseError("duplicate key ``key`` when parsing `` type ``.");
+
+
+shared String|ParseError parseJsonString(EventStream stream) {
+    switch (item = stream.next())
+    case (is String) {
+        return item;
+    }
+    else {
+        return unexpectedEvent(`String`, item, `String`);
+    }
+}
+
+shared Float|ParseError parseJsonFloat(EventStream stream) {
+    switch (item = stream.next())
+    case (is Float) {
+        return item;
+    }
+    case (is Integer) {
+        return item.float;
+    }
+    else {
+        return unexpectedEvent(`Float`, item);
+    }
+}
+
+shared Integer|ParseError parseJsonInteger(EventStream stream) {
+    switch (item = stream.next())
+    case (is Integer) {
+        return item;
+    }
+    else {
+        return unexpectedEvent(`Integer`, item);
+    }
+}
+shared Boolean|ParseError parseJsonBoolean(EventStream stream) {
+    switch (item = stream.next())
+    case (is Boolean) {
+        return item;
+    }
+    else {
+        return unexpectedEvent(`Boolean`, item);
+    }
+}
+shared Map<String, X>|ParseError parseJsonMap<X>(EventStream stream, X|ParseError parseItem(EventStream stream)) {
+    value firstEvent = stream.next();
+    if (!firstEvent is ObjectStartEvent) {
+        return unexpectedEvent(`Map<String, X>`, firstEvent, `ObjectStartEvent`);
+    }
+    value map = HashMap<String, X>();
+    while(true) {
+        switch(event = stream.next())
+        case(is KeyEvent) {
+            value key = event.key;
+                value item = parseItem(stream);
+                if(is ParseError item) {
+                    return item;
+                } else {
+                    map.put(key, item);
+                }
+        }
+        case(is ObjectEndEvent) {
+            return unmodifiableMap(map);
+        }
+        else {
+            return unexpectedEvent(`Map<String, X>`, event);
+        }
+    }
+}
+
+shared List<X>|ParseError parseJsonArray<X>(EventStream stream, X|ParseError parseItem(EventStream stream)) {
+    value firstEvent = stream.next();
+    if (!firstEvent is ArrayStartEvent) {
+        return unexpectedEvent(`List<X>`, firstEvent, `ArrayStartEvent`);
+    }
+    value items = ArrayList<X>();
+    while (!stream.peek() is ArrayEndEvent) {
+        value item = parseItem(stream);
+        if (is ParseError item) {
+            return item;
+        } else {
+            items.add(item);
+        }
+    }
+    assert (stream.next() is ArrayEndEvent);
+
+    return items.sequence();
+}

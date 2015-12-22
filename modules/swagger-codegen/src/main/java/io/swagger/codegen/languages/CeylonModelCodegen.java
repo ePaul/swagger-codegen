@@ -170,13 +170,20 @@ public class CeylonModelCodegen extends DefaultCodegen implements CodegenConfig 
 
         this.sanitizeConfig();
 
-        final String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
-        final String modelFolder = (sourceFolder + '/' + modelPackage).replace(".", "/");
+        final String helperPackage = invokerPackage + ".helper";
+
+        additionalProperties.put("helperPackage", helperPackage);
+
+        final String invokerFolder = sourceFolder + '/' + invokerPackage.replace(".", "/");
+        final String modelFolder = sourceFolder + '/' + modelPackage.replace(".", "/");
+        final String helperFolder = sourceFolder + '/' + helperPackage.replace('.', '/');
 
         supportingFiles.add(new SupportingFile("module.mustache", invokerFolder, "module.ceylon"));
         supportingFiles.add(new SupportingFile("invokerPackage.mustache", invokerFolder, "package.ceylon"));
         supportingFiles.add(new SupportingFile("modelPackage.mustache", modelFolder, "package.ceylon"));
-        supportingFiles.add(new SupportingFile("jsonHelper.mustache", invokerFolder, "jsonHelper.ceylon"));
+        supportingFiles.add(new SupportingFile("jsonHelper.mustache", helperFolder, "jsonHelper.ceylon"));
+        supportingFiles.add(new SupportingFile("jsonParseHelper.mustache", helperFolder, "jsonParseHelper.ceylon"));
+        supportingFiles.add(new SupportingFile("helperPackage.mustache", helperFolder, "package.ceylon"));
 
         additionalProperties.put("versionNumber", versionNumber);
     }
