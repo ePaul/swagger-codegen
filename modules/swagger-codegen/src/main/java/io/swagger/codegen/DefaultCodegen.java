@@ -838,6 +838,12 @@ public class DefaultCodegen {
             addVars(m, properties, required);
         } else {
             ModelImpl impl = (ModelImpl) model;
+            if(impl.getEnum() != null && impl.getEnum().size() > 0) {
+                m.isEnum = true;
+                m.allowableValues = impl.getEnum();
+                Property p = PropertyBuilder.build(impl.getType(), impl.getFormat(), null);
+                m.dataType = getSwaggerType(p);
+            }
             if (impl.getAdditionalProperties() != null) {
                 MapProperty mapProperty = new MapProperty(impl.getAdditionalProperties());
                 addParentContainer(m, name, mapProperty);
@@ -1708,8 +1714,7 @@ public class DefaultCodegen {
      */
     protected boolean needToImport(String type) {
         return !defaultIncludes.contains(type)
-            && !languageSpecificPrimitives.contains(type)
-            && type.indexOf(".") < 0;
+            && !languageSpecificPrimitives.contains(type);
     }
 
     protected List<Map<String, Object>> toExamples(Map<String, Object> examples) {
@@ -1821,6 +1826,16 @@ public class DefaultCodegen {
         word = word.replace('-', '_');
         word = word.toLowerCase();
         return word;
+    }
+
+    /**
+     * Dashize the given word.
+     *
+     * @param word The word
+     * @return The dashized version of the word, e.g. "my-name"
+     */
+    protected String dashize(String word) {
+        return underscore(word).replaceAll("[_ ]", "-");
     }
 
     /**
