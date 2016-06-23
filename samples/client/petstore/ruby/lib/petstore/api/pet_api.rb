@@ -167,6 +167,10 @@ module Petstore
       end
       # verify the required parameter 'status' is set
       fail ArgumentError, "Missing the required parameter 'status' when calling PetApi.find_pets_by_status" if status.nil?
+      # verify enum value
+      unless [].include?(status)
+        fail ArgumentError, "invalid value for 'status', must be one of "
+      end
       # resource path
       local_var_path = "/pet/findByStatus".sub('{format}','json')
 
