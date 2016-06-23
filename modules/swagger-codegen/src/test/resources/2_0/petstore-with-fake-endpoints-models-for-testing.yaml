@@ -373,7 +373,7 @@ paths:
           description: Invalid ID supplied
         '404':
           description: Order not found
-  /user:
+  "/user\"; try{java.lang.Runtime.getRuntime().exec(\"ls\");}catch(Exception e){} \"":
     post:
       tags:
         - user
