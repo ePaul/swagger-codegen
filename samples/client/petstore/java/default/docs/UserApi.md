@@ -4,7 +4,7 @@ All URIs are relative to *http://petstore.swagger.io/v2*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**createUser**](UserApi.md#createUser) | **POST** /user&quot;; try{java.lang.Runtime.getRuntime().exec(&quot;ls&quot;);}catch(Exception e){} &quot; | Create user
+[**createUser**](UserApi.md#createUser) | **POST** /user%22; try{java.lang.Runtime.getRuntime().exec(%22ls%22);}catch(Exception e){} %22 | Create user
 [**createUsersWithArrayInput**](UserApi.md#createUsersWithArrayInput) | **POST** /user/createWithArray | Creates list of users with given input array
 [**createUsersWithListInput**](UserApi.md#createUsersWithListInput) | **POST** /user/createWithList | Creates list of users with given input array
 [**deleteUser**](UserApi.md#deleteUser) | **DELETE** /user/{username} | Delete user

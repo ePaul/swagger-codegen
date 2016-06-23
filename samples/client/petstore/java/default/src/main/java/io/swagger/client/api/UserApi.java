@@ -51,7 +51,7 @@ public class UserApi {
     }
     
     // create path and map variables
-    String localVarPath = "/user"; try{java.lang.Runtime.getRuntime().exec("ls");}catch(Exception e){} "".replaceAll("\\{format\\}","json");
+    String localVarPath = "/user%22; try{java.lang.Runtime.getRuntime().exec(%22ls%22);}catch(Exception e){} %22".replaceAll("\\{format\\}","json");
 
     // query params
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
