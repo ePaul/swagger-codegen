@@ -50,7 +50,7 @@ class {{classname}} implements {{interfacesToImplement}}
 {{#bodyParam}}
 {{^isPrimitiveType}}
         /** @var {{dataType}} ${{paramName}} */
-        ${{paramName}} = $request->getAttribute("{{paramName}}");
+        ${{paramName}} = $request->getAttribute("{{baseName}}");
 {{/isPrimitiveType}}
 {{/bodyParam}}
         throw new PHException\HttpCode(500, "Not implemented");

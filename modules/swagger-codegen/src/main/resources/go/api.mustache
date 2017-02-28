@@ -126,7 +126,7 @@ func (a {{{classname}}}) {{{nickname}}}({{#allParams}}{{paramName}} {{{dataType}
 	localVarFileName = file.Name()
 {{/isFile}}
 {{^isFile}}
-	localVarFormParams["{{paramName}}"] = a.Configuration.APIClient.ParameterToString({{paramName}}, "")
+	localVarFormParams["{{baseName}}"] = a.Configuration.APIClient.ParameterToString({{paramName}}, "")
 {{/isFile}}
 {{/formParams}}
 {{/hasFormParams}}

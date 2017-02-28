@@ -65,7 +65,7 @@ void
   int sz = {{paramName}}->GetCount();
   for(int i = 0; i < sz; i++) {
     String itemAt = stringify({{paramName}}->GetAt(i), "{{baseType}}");
-    headerParams->Add(new String("{{paramName}}"), new String(itemAt));
+    headerParams->Add(new String("{{baseName}}"), new String(itemAt));
   }
   {{/collectionFormat}}{{^collectionFormat}}
     headerParams->Add(new String("{{baseName}}"), {{paramName}});
@@ -79,7 +79,7 @@ void
   int sz = {{paramName}}->GetCount();
   for(int i = 0; i < sz; i++) {
     String itemAt = stringify({{paramName}}->GetAt(i), "{{baseType}}");
-    queryParams->Add(new String("{{paramName}}"), new String(itemAt));
+    queryParams->Add(new String("{{baseName}}"), new String(itemAt));
   }
   {{/collectionFormat}}{{^collectionFormat}}
     queryParams->Add(new String("{{baseName}}"), {{paramName}});

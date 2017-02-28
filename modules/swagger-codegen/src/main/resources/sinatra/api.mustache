@@ -13,7 +13,7 @@ MyApp.add_route('{{httpMethod}}', '{{basePathWithoutHost}}{{path}}', {
   "parameters" => [
     {{#queryParams}}
     {
-      "name" => "{{paramName}}",
+      "name" => "{{baseName}}",
       "description" => "{{description}}",
       "dataType" => "{{dataType}}",
       "paramType" => "query",
@@ -24,7 +24,7 @@ MyApp.add_route('{{httpMethod}}', '{{basePathWithoutHost}}{{path}}', {
     {{/queryParams}}
     {{#pathParams}}
     {
-      "name" => "{{paramName}}",
+      "name" => "{{baseName}}",
       "description" => "{{description}}",
       "dataType" => "{{dataType}}",
       "paramType" => "path",
@@ -32,7 +32,7 @@ MyApp.add_route('{{httpMethod}}', '{{basePathWithoutHost}}{{path}}', {
     {{/pathParams}}
     {{#headerParams}}
     {
-      "name" => "{{paramName}}",
+      "name" => "{{baseName}}",
       "description" => "{{description}}",
       "dataType" => "{{dataType}}",
       "paramType" => "header",

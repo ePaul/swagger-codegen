@@ -183,7 +183,7 @@ pplx::task<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/r
         {{#bodyParam}}
         std::shared_ptr<MultipartFormData> multipart(new MultipartFormData);
         {{#isPrimitiveType}}
-        multipart->add(ModelBase::toHttpContent("{{paramName}}", {{paramName}}));
+        multipart->add(ModelBase::toHttpContent("{{baseName}}", {{paramName}}));
         {{/isPrimitiveType}}
         {{^isPrimitiveType}}
         {{#isListContainer}}
@@ -197,16 +197,16 @@ pplx::task<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/r
                 {{/items.isDateTime}}{{^items.isDateTime}}jsonArray.push_back( item.get() ? item->toJson() : web::json::value::null() );
                 {{/items.isDateTime}}{{/items.isString}}{{/items.isPrimitiveType}}
             }
-            multipart->add(ModelBase::toHttpContent(U("{{paramName}}"), web::json::value::array(jsonArray), U("application/json")));
+            multipart->add(ModelBase::toHttpContent(U("{{baseName}}"), web::json::value::array(jsonArray), U("application/json")));
         }
         {{/isListContainer}}
         {{^isListContainer}}
-        {{#isString}}multipart->add(ModelBase::toHttpContent(U("{{paramName}}"), {{paramName}}));
+        {{#isString}}multipart->add(ModelBase::toHttpContent(U("{{baseName}}"), {{paramName}}));
         {{/isString}}
         {{^isString}}
         if({{paramName}}.get())
         {
-            {{paramName}}->toMultipart(multipart, U("{{paramName}}"));
+            {{paramName}}->toMultipart(multipart, U("{{baseName}}"));
         }
         {{/isString}}
         {{/isListContainer}}

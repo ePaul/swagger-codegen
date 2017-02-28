@@ -1,5 +1,5 @@
     {{#isQueryParam}}
-      {{#collectionFormat}}val {{paramName}}String = params.getAs[String]("{{paramName}}")
+      {{#collectionFormat}}val {{paramName}}String = params.getAs[String]("{{baseName}}")
       val {{paramName}} = if("{{collectionFormat}}" == "default" || "{{collectionFormat}}" == "csv") {
         {{paramName}}String match {
           case Some(str) => str.split(",").toSeq
@@ -9,5 +9,5 @@
       else
         Seq()
       {{/collectionFormat}}
-      {{^collectionFormat}}val {{paramName}} = params.getAs[{{dataType}}]("{{paramName}}"){{/collectionFormat}}
+      {{^collectionFormat}}val {{paramName}} = params.getAs[{{dataType}}]("{{baseName}}"){{/collectionFormat}}
     {{/isQueryParam}}

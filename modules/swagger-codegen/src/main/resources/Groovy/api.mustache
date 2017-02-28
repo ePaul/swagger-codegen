@@ -35,11 +35,11 @@ class {{classname}} {
         {{/allParams}}
 
         {{#queryParams}}if (!"null".equals(String.valueOf({{paramName}})))
-            queryParams.put("{{paramName}}", String.valueOf({{paramName}}))
+            queryParams.put("{{baseName}}", String.valueOf({{paramName}}))
         {{/queryParams}}
 
         {{#headerParams}}
-        headerParams.put("{{paramName}}", {{paramName}})
+        headerParams.put("{{baseName}}", {{paramName}})
         {{/headerParams}}
 
         invokeApi(onSuccess, onFailure, basePath, versionPath, resourcePath, queryParams, headerParams,
