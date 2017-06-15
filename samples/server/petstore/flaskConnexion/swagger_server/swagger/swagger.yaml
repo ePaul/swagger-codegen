@@ -108,11 +108,11 @@ paths:
         type: "array"
         items:
           type: "string"
-          default: "available"
           enum:
           - "available"
           - "pending"
           - "sold"
+          default: "available"
         collectionFormat: "csv"
       responses:
         200:
@@ -627,6 +627,17 @@ definitions:
     description: "An order for a pets from the pet store"
     xml:
       name: "Order"
+  ReturnStatus:
+    type: "string"
+    description: "Device's return status"
+    example: "\"InTransit\""
+    enum:
+    - "NotReturned"
+    - "Recycled"
+    - "Trashed"
+    - "InTransit"
+    - "InvestigationPending"
+    - "Lost"
   Category:
     type: "object"
     properties:

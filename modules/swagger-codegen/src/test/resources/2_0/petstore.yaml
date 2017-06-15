@@ -600,6 +600,17 @@ definitions:
         default: false
     xml:
       name: Order
+  ReturnStatus:
+    type: string
+    enum:
+      - NotReturned
+      - Recycled
+      - Trashed
+      - InTransit
+      - InvestigationPending
+      - Lost
+    description: "Device's return status"
+    example: InTransit
   Category:
     title: Pet catehgry
     description: A category for a pet
@@ -665,7 +676,7 @@ definitions:
         $ref: '#/definitions/Category'
       name:
         type: string
-        example: doggie
+        example: "doggie"
       photoUrls:
         type: array
         xml:

@@ -6,5 +6,6 @@ from .api_response import ApiResponse
 from .category import Category
 from .order import Order
 from .pet import Pet
+from .return_status import ReturnStatus
 from .tag import Tag
 from .user import User
