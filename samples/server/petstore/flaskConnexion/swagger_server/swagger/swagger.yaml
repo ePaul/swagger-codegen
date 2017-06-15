@@ -630,7 +630,7 @@ definitions:
   ReturnStatus:
     type: "string"
     description: "Device's return status"
-    example: "\"InTransit\""
+    example: "InTransit"
     enum:
     - "NotReturned"
     - "Recycled"
